@@ -1,7 +1,7 @@
 module Pivotality
 
   class Piv
-    attr_reader :requirements, :year
+    attr_reader :requirements, :year, :imports, :limits, :operator_production, :competitor_production
     def initialize(year)
       @year = year
 
@@ -19,8 +19,6 @@ module Pivotality
 
     # hash = {zone_id => values}
     def add_energy_req(hash)
-      puts @requirements.inspect
-      puts @xrequirements.inspect
       @requirements[:ene] = hash
     end
 
@@ -53,12 +51,24 @@ module Pivotality
       @zone_name = hash
     end
 
+    def zone_name(n)
+      @zone_name.fetch(n, :undefined)
+    end
+
     def set_operators_decode(hash)
       @operator_name = hash
     end
 
+    def operator_name(n)
+      @operator_name.fetch(n, :undefined)
+    end
+
     def zone_ids
       @zone_ids ||= extract_zone_ids
+    end
+
+    def operator_ids
+      @operator_ids ||= extract_operator_ids
     end
 
 
@@ -104,11 +114,16 @@ module Pivotality
       z += @requirements[:pot].keys
       z += @imports.keys
       z += @limits.keys
-      z += @limits.values.map(&:key).flatten
-      z += @operator_production.values.map(&:key).flatten
-      z += @competitor_production.values.map(&:key).flatten
+      z += @limits.values.map(&:keys).flatten
+      z += @operator_production.values.map(&:keys).flatten
+      z += @competitor_production.values.map(&:keys).flatten
       z.uniq.sort
     end
 
+    def extract_operator_ids
+      z = @operator_production.keys
+      z += @competitor_production.keys
+      z.uniq.sort
+    end
   end
 end
