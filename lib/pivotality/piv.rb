@@ -72,58 +72,115 @@ module Pivotality
     end
 
 
-    def calculate
-      @operator_production.each_pair do |op_id, zone_op_prod|
-        # fabb energia
-        [:ene, :pot].each do |req_type|
 
-          1.upto(zones.size).each do |zone_set_size|
-            zone_sets = zones.combination(zone_set_size)
-            zone_sets.each do |zone_set|
-              res = 0.0  # residuo
-              prop = 0.0 # produzione operatore
-              zone_set.each do |zone|
-                res += fabb_data[tipo_fabb][zone.id]
-                res -= operators_data[op.id][zone.id][:co]
-                prop += operators_data[op.id][zone.id][:op]
-                if limits_data[zone.id]
-                  limits_data[zone.id].each_pair do |from_zone_id, dtum_obj|
-                    res -= dtum_obj # !!! se le zone sono adiacenti...
-                  end
-                end
-                res -= imports_data[zone_id] if imports_data[zone_id]
-              end
-              res = min(res, prop)
+    def calc_single_zone_residuals(operator_id, req_type)
+      puts "operator_id: #{operator_id.inspect}"
+      puts "req_type:    #{req_type.inspect}"
+      puts "zone_ids:    #{zone_ids.inspect}"
+      # @zone_residual_demand = ZoneResidualDemand.new
+      single_zone_residual = {}
+      zone_ids.each do |zone_id|
+        single_zone_residual[zone_id] = calc_single_zone_residual(operator_id, req_type, zone_id)
+        # single_zone_residual[zone_id] = res # Yarray.min(res, Yarray.new(year, arr: v)
+      end
+      single_zone_residual
+    end
 
-              if res>0
-                # memorizza risultato...
-                results[op.id][tipo_fabb][zone_set] = res
-              end
-            end
-          end
 
-        end
+    def calc_single_zone_residual(operator_id, req_type, zone_id)
+      puts zone_id
+      res = Yarray.new(year, arr: @requirements[:ene][zone_id])
+      if @competitor_production[operator_id].has_key? zone_id # TODO: e se fossero più di una?
+        res -= Yarray.new(year, arr: @competitor_production[operator_id][zone_id])
+      end
+      if @imports.has_key? zone_id # TODO: e se fossero più di una?
+        res -= Yarray.new(year, arr: @imports[zone_id])
+      end
+      @limits.fetch(zone_id, {}).each_pair do |from_zone_id, v|
+        res -= Yarray.new(year, arr: v)
+      end
+      res
+    end
 
+    # zone_set is an array of zone ids
+    def sum_operator_production(operator_id, zone_set)
+      zone_set.inject(Yarray.new(year)) { |sum, zone_id| sum + Yarray.new(year, arr: @operator_production[operator_id][zone_id]) }
+    end
+
+    class Result
+      attr_reader :res
+      def initialize
+        @res = {}
       end
 
+      def add_residual_demand(operator_id, req_type, zone_set, res)
+        @res[[operator_id, req_type, zone_set]] = res.any_positive? ? res : :negative
+      end
+    end
+
+    def init_calculation
+      @result = Result.new
+    end
+
+    def subset_sizes
+      1.upto(zone_ids.size).to_a
+    end
+
+    def calc_zones_residual(single_zone_residual, zone_set)
+      sum = Yarray.new(year)
+      zone_set.each do |zone_id|
+        sum += single_zone_residual[zone_id]
+        zone_set.select{|e| e!=zone_id}.each do |z_id|
+          if @limits[zone_id] && @limits[zone_id][z_id]
+            v = @limits[zone_id][z_id]
+            sum += Yarray.new(year, arr: v)
+          end
+        end
+      end
+      sum
+    end
+
+
+    # Minimum between the residual and the op. production (in the given zones set)
+    def net_residual_demand(single_zone_residual, zone_set, op_id)
+      zones_demand_res = calc_zones_residual(single_zone_residual, zone_set)
+      # Minimum between the residual and the op. production (in the given zones set)
+      Yarray.min(zones_demand_res, sum_operator_production(op_id, zone_set))
+    end
+
+    def calculate
+      init_calculation
+      @operator_ids.each do |op_id|
+        [:ene, :pot].each do |req_type|
+          single_zone_residual = calc_single_zone_residuals(op_id, req_type)
+          subset_sizes.each do |subset_size|
+            puts "zone combination of #{subset_size}..."
+            zone_ids.combination(subset_size).each do |zone_set|
+              min = net_residual_demand(single_zone_residual, zone_set, op_id)
+              @result.add_residual_demand(op_id, req_type, zone_set, min)
+            end
+          end
+        end
+      end
     end
 
     private
-    def extract_zone_ids
-      z = @requirements[:ene].keys
-      z += @requirements[:pot].keys
-      z += @imports.keys
-      z += @limits.keys
-      z += @limits.values.map(&:keys).flatten
-      z += @operator_production.values.map(&:keys).flatten
-      z += @competitor_production.values.map(&:keys).flatten
-      z.uniq.sort
-    end
 
-    def extract_operator_ids
-      z = @operator_production.keys
-      z += @competitor_production.keys
-      z.uniq.sort
-    end
+      def extract_zone_ids
+        z = @requirements[:ene].keys
+        z += @requirements[:pot].keys
+        z += @imports.keys
+        z += @limits.keys
+        z += @limits.values.map(&:keys).flatten
+        z += @operator_production.values.map(&:keys).flatten
+        z += @competitor_production.values.map(&:keys).flatten
+        z.uniq.sort
+      end
+
+      def extract_operator_ids
+        z = @operator_production.keys
+        z += @competitor_production.keys
+        z.uniq.sort
+      end
   end
 end

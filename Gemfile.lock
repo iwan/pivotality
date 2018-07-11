@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     pivotality (0.1.0)
-      year_array (~> 0.1.0)
+      year_array (~> 0.1.2)
 
 GEM
   remote: https://rubygems.org/
@@ -34,7 +34,7 @@ GEM
     thread_safe (0.3.6)
     tzinfo (1.2.5)
       thread_safe (~> 0.1)
-    year_array (0.1.0)
+    year_array (0.1.2)
       activesupport (~> 4.2)
 
 PLATFORMS
