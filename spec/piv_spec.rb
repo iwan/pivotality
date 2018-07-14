@@ -99,7 +99,7 @@ RSpec.describe Piv do
         piv.add_operator_production(op_id, zone_id => Array.new(8760, 25), 2 => Array.new(8760, 78))
         piv.add_competitor_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
 
-        res = piv.calc_single_zone_residual(op_id, :ene, zone_id)
+        res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
         min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
         expect(min.any_negative?).to be(false)
         expect(min.any_positive?).to be(true)
@@ -114,7 +114,7 @@ RSpec.describe Piv do
         piv.add_operator_production(op_id, zone_id => Array.new(8760, 8), 2 => Array.new(8760, 78))
         piv.add_competitor_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
 
-        res = piv.calc_single_zone_residual(op_id, :ene, zone_id)
+        res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
         min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
         expect(min.any_negative?).to be(false)
         expect(min.any_positive?).to be(true)
@@ -129,7 +129,7 @@ RSpec.describe Piv do
         piv.add_operator_production(op_id, zone_id => Array.new(8760, 8), 2 => Array.new(8760, 78))
         piv.add_competitor_production(op_id, zone_id => Array.new(8760, 55), 2 => Array.new(8760, 98))
 
-        res = piv.calc_single_zone_residual(op_id, :ene, zone_id)
+        res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
         min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
         expect(min.any_negative?).to be(true)
         expect(min.any_positive?).to be(false)
@@ -161,8 +161,9 @@ RSpec.describe Piv do
         piv.add_operator_production(op1, z1 => Array.new(8760, 25), z2 => Array.new(8760, 78))
         piv.add_competitor_production(op1, z1 => Array.new(8760, 30), z2 => Array.new(8760, 98))
 
-        single_zone_residual = piv.calc_single_zone_residuals(op1, req_type)
-        min = piv.net_residual_demand(single_zone_residual, zone_set, op1)
+        gross_zone_residual_demand = piv.calc_zone_residual_demands(op1, req_type)
+        # min = piv.net_residual_demand(gross_zone_residual_demand, zone_set, op1)
+        min = piv.net_residual_demand(op1, req_type, zone_set)
         expect(min.any_negative?).to be(false)
         expect(min.any_positive?).to be(true)
         expect(min.arr[0]).to eq(21)
@@ -181,8 +182,10 @@ RSpec.describe Piv do
         piv.add_operator_production(op1, z1 => Array.new(8760, 25), z2 => Array.new(8760, 78))
         piv.add_competitor_production(op1, z1 => Array.new(8760, 30), z2 => Array.new(8760, 98))
 
-        single_zone_residual = piv.calc_single_zone_residuals(op1, req_type)
-        min = piv.net_residual_demand(single_zone_residual, zone_set, op1)
+        gross_zone_residual_demand = piv.calc_zone_residual_demands(op1, req_type)
+        # min = piv.net_residual_demand(gross_zone_residual_demand, zone_set, op1)
+        min = piv.net_residual_demand(op1, req_type, zone_set)
+
         expect(min.any_negative?).to be(false)
         expect(min.any_positive?).to be(true)
         expect(min.arr[0]).to eq(103)
@@ -190,5 +193,4 @@ RSpec.describe Piv do
       end
     end
   end
-
 end

@@ -1,7 +1,8 @@
 module Pivotality
 
   class Piv
-    attr_reader :requirements, :year, :imports, :limits, :operator_production, :competitor_production
+    attr_reader :requirements, :year, :imports, :limits, :operator_production, :competitor_production, :results
+
     def initialize(year)
       @year = year
 
@@ -15,81 +16,95 @@ module Pivotality
       @competitor_production = {}  #  { operator_id => {zone_id => values, ...}, ...}
 
       @zone_ids
+      init_calculation
     end
 
-    # hash = {zone_id => values}
+    # Add Energy request ("Fabbisogno di energia") data,
+    # as an hash {zone_id => values, ...}
     def add_energy_req(hash)
       @requirements[:ene] = hash
     end
 
-    # hash = {zone_id => values}
+    # Add Power request ("Fabbisogno di potenza") data,
+    # as an hash {zone_id => values, ...}
     def add_power_req(hash)
       @requirements[:pot] = hash
     end
 
-    # hash: {zone_id => values}
+    # Add Imports from abroad data,
+    # as an hash {zone_id => values, ...}
     def add_imports(hash)
       @imports = hash
     end
 
-    # hash: { to_zone_id => { from_zone_id => values, ... }}
+    # Add limits of energy transport between zones data,
+    # as an hash: { to_zone_id => {from_zone_id => values, ...}, ...}
     def add_limits(hash)
       @limits = hash
     end
 
-    # hash = {zone_id => values}
+    # Add zone total production of the operator
+    # pass the operator and an hash: {zone_id => values}
     def add_operator_production(operator_id, hash)
       @operator_production[operator_id] = hash
     end
 
-    # hash = {zone_id => values}
+    # Add zone total production of competitors of the operator
+    # pass the operator and an hash: {zone_id => values}
     def add_competitor_production(operator_id, hash)
       @competitor_production[operator_id] = hash
     end
 
+    # Set the zone_id => zone_name pairs
     def set_zones_decode(hash)
       @zone_name = hash
     end
 
-    def zone_name(n)
-      @zone_name.fetch(n, :undefined)
+    # Get the zone name, given the zone id
+    def zone_name(zone_id)
+      @zone_name.fetch(zone_id, :undefined)
     end
 
+    # Set the operator_id => operator_name pairs
     def set_operators_decode(hash)
       @operator_name = hash
     end
 
-    def operator_name(n)
-      @operator_name.fetch(n, :undefined)
+    # Get the operator name, given the operator id
+    def operator_name(operator_id)
+      @operator_name.fetch(operator_id, :undefined)
     end
 
+    # Get the zone ids (extracted from previously given data)
     def zone_ids
       @zone_ids ||= extract_zone_ids
     end
 
+    # Get the operator ids (extracted from previously given data)
     def operator_ids
       @operator_ids ||= extract_operator_ids
     end
 
 
+    # Sum the total production of an operator in the zone set
+    # (zone_set is an array of zone ids)
+    def sum_operator_production(operator_id, zone_set)
+      zone_set.inject(Yarray.new(year)) { |sum, zone_id| sum + Yarray.new(year, arr: @operator_production[operator_id][zone_id]) }
+    end
 
-    def calc_single_zone_residuals(operator_id, req_type)
-      puts "operator_id: #{operator_id.inspect}"
-      puts "req_type:    #{req_type.inspect}"
-      puts "zone_ids:    #{zone_ids.inspect}"
-      # @zone_residual_demand = ZoneResidualDemand.new
-      single_zone_residual = {}
-      zone_ids.each do |zone_id|
-        single_zone_residual[zone_id] = calc_single_zone_residual(operator_id, req_type, zone_id)
-        # single_zone_residual[zone_id] = res # Yarray.min(res, Yarray.new(year, arr: v)
-      end
-      single_zone_residual
+    # Initialize the results object
+    def init_calculation
+      @results ||= PivResults.new
+      @gross_zone_residual_demands ||= GrossZoneResidualDemands.new
     end
 
 
-    def calc_single_zone_residual(operator_id, req_type, zone_id)
-      puts zone_id
-      res = Yarray.new(year, arr: @requirements[:ene][zone_id])
+    # Calculates the 'gross' residual demand related to a single zone and
+    # an operator.
+    # req_type specify which energy request should be used for calculation
+    #  (:ene for energy request and :pot for power request)
+    def calc_zone_residual_demand(operator_id, req_type, zone_id)
+      res = Yarray.new(year, arr: @requirements[req_type][zone_id])
       if @competitor_production[operator_id].has_key? zone_id # TODO: e se fossero più di una?
         res -= Yarray.new(year, arr: @competitor_production[operator_id][zone_id])
       end
@@ -102,34 +117,17 @@ module Pivotality
       res
     end
 
-    # zone_set is an array of zone ids
-    def sum_operator_production(operator_id, zone_set)
-      zone_set.inject(Yarray.new(year)) { |sum, zone_id| sum + Yarray.new(year, arr: @operator_production[operator_id][zone_id]) }
-    end
 
-    class Result
-      attr_reader :res
-      def initialize
-        @res = {}
-      end
-
-      def add_residual_demand(operator_id, req_type, zone_set, res)
-        @res[[operator_id, req_type, zone_set]] = res.any_positive? ? res : :negative
-      end
-    end
-
-    def init_calculation
-      @result = Result.new
-    end
-
-    def subset_sizes
-      1.upto(zone_ids.size).to_a
-    end
-
-    def calc_zones_residual(single_zone_residual, zone_set)
+    # Calculates the residual demand of the given zone set
+    def calc_zones_residual_demand(operator_id, req_type, zone_set)
       sum = Yarray.new(year)
       zone_set.each do |zone_id|
-        sum += single_zone_residual[zone_id]
+        d = @gross_zone_residual_demands.get(operator: operator_id, req_type: req_type, zone: zone_id)
+        if d.nil?
+          d = calc_zone_residual_demand(operator_id, req_type, zone_id)
+          @gross_zone_residual_demands.add(operator: operator_id, req_type: req_type, zone: zone_id, yarray: d)
+        end
+        sum += d
         zone_set.select{|e| e!=zone_id}.each do |z_id|
           if @limits[zone_id] && @limits[zone_id][z_id]
             v = @limits[zone_id][z_id]
@@ -142,22 +140,22 @@ module Pivotality
 
 
     # Minimum between the residual and the op. production (in the given zones set)
-    def net_residual_demand(single_zone_residual, zone_set, op_id)
-      zones_demand_res = calc_zones_residual(single_zone_residual, zone_set)
-      # Minimum between the residual and the op. production (in the given zones set)
-      Yarray.min(zones_demand_res, sum_operator_production(op_id, zone_set))
+    def net_residual_demand(operator_id, req_type, zone_set)
+      zones_demand_res = calc_zones_residual_demand(operator_id, req_type, zone_set)
+      Yarray.min(zones_demand_res, sum_operator_production(operator_id, zone_set))
     end
 
+    # Run calculation for all operators, two req types, all zones
     def calculate
-      init_calculation
-      @operator_ids.each do |op_id|
+      operator_ids.each do |operator_id|
+        puts "operator: #{operator_id}"
         [:ene, :pot].each do |req_type|
-          single_zone_residual = calc_single_zone_residuals(op_id, req_type)
+          puts "  req_type: #{req_type}"
           subset_sizes.each do |subset_size|
-            puts "zone combination of #{subset_size}..."
+            puts "    zone combination of #{subset_size}..."
             zone_ids.combination(subset_size).each do |zone_set|
-              min = net_residual_demand(single_zone_residual, zone_set, op_id)
-              @result.add_residual_demand(op_id, req_type, zone_set, min)
+              min = net_residual_demand(operator_id, req_type, zone_set)
+              @results.add(operator: operator_id, req_type: req_type, zone_set: zone_set, yarray: min)
             end
           end
         end
@@ -182,5 +180,10 @@ module Pivotality
         z += @competitor_production.keys
         z.uniq.sort
       end
+
+      def subset_sizes
+        1.upto(zone_ids.size).to_a
+      end
+
   end
 end
