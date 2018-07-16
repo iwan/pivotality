@@ -51,7 +51,7 @@ module Pivotality
 
     # Add zone total production of competitors of the operator
     # pass the operator and an hash: {zone_id => values}
-    def add_competitor_production(operator_id, hash)
+    def add_competitors_production(operator_id, hash)
       @competitor_production[operator_id] = hash
     end
 

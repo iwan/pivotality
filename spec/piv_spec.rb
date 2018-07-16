@@ -46,7 +46,7 @@ RSpec.describe Piv do
 
   it "add competitor production" do
     piv = Piv.new(2014)
-    piv.add_competitor_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
+    piv.add_competitors_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
     expect(piv.competitor_production[3][7]).to eq([9,3,5,7])
     expect(piv.competitor_production[3][8]).to eq([3,2,1])
   end
@@ -58,7 +58,7 @@ RSpec.describe Piv do
     piv.add_imports(2 => [9,3,5,7], 8 => [3,2,1])
     piv.add_limits(7 => {8 => [3,2,1]}, 8 => {7 => [9,3,5,7]})
     piv.add_operator_production(3, 3 => [9,3,5,7], 8 => [3,2,1])
-    piv.add_competitor_production(3, 7 => [9,3,5,7], 5 => [3,2,1])
+    piv.add_competitors_production(3, 7 => [9,3,5,7], 5 => [3,2,1])
     expect(piv.zone_ids).to eq([1,2,3,5,7,8])
   end
 
@@ -66,8 +66,8 @@ RSpec.describe Piv do
     piv = Piv.new(2014)
     piv.add_operator_production(3, 3 => [9,3,5,7], 8 => [3,2,1])
     piv.add_operator_production(4, 3 => [9,3,5,7], 8 => [3,2,1])
-    piv.add_competitor_production(3, 7 => [9,3,5,7], 5 => [3,2,1])
-    piv.add_competitor_production(5, 7 => [9,3,5,7], 5 => [3,2,1])
+    piv.add_competitors_production(3, 7 => [9,3,5,7], 5 => [3,2,1])
+    piv.add_competitors_production(5, 7 => [9,3,5,7], 5 => [3,2,1])
     expect(piv.operator_ids).to eq([3,4,5])
   end
 
@@ -97,7 +97,7 @@ RSpec.describe Piv do
         piv.add_imports(zone_id => Array.new(8760, 27), 2 => Array.new(8760, 44))
         piv.add_limits(zone_id => {2 => Array.new(8760, 15), 3 => Array.new(8760, 13)}, 3 => {2 => Array.new(8760, 34)})
         piv.add_operator_production(op_id, zone_id => Array.new(8760, 25), 2 => Array.new(8760, 78))
-        piv.add_competitor_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
+        piv.add_competitors_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
 
         res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
         min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
@@ -112,7 +112,7 @@ RSpec.describe Piv do
         piv.add_imports(zone_id => Array.new(8760, 27), 2 => Array.new(8760, 44))
         piv.add_limits(zone_id => {2 => Array.new(8760, 15), 3 => Array.new(8760, 13)}, 3 => {2 => Array.new(8760, 34)})
         piv.add_operator_production(op_id, zone_id => Array.new(8760, 8), 2 => Array.new(8760, 78))
-        piv.add_competitor_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
+        piv.add_competitors_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
 
         res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
         min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
@@ -127,7 +127,7 @@ RSpec.describe Piv do
         piv.add_imports(zone_id => Array.new(8760, 27), 2 => Array.new(8760, 44))
         piv.add_limits(zone_id => {2 => Array.new(8760, 15), 3 => Array.new(8760, 13)}, 3 => {2 => Array.new(8760, 34)})
         piv.add_operator_production(op_id, zone_id => Array.new(8760, 8), 2 => Array.new(8760, 78))
-        piv.add_competitor_production(op_id, zone_id => Array.new(8760, 55), 2 => Array.new(8760, 98))
+        piv.add_competitors_production(op_id, zone_id => Array.new(8760, 55), 2 => Array.new(8760, 98))
 
         res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
         min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
@@ -159,7 +159,7 @@ RSpec.describe Piv do
           z2 => {z1 => Array.new(8760, 23), z3 => Array.new(8760, 117)},
           z3 => {z1 => Array.new(8760, 34), z2 => Array.new(8760, 34)})
         piv.add_operator_production(op1, z1 => Array.new(8760, 25), z2 => Array.new(8760, 78))
-        piv.add_competitor_production(op1, z1 => Array.new(8760, 30), z2 => Array.new(8760, 98))
+        piv.add_competitors_production(op1, z1 => Array.new(8760, 30), z2 => Array.new(8760, 98))
 
         gross_zone_residual_demand = piv.calc_zone_residual_demands(op1, req_type)
         # min = piv.net_residual_demand(gross_zone_residual_demand, zone_set, op1)
@@ -180,7 +180,7 @@ RSpec.describe Piv do
           z2 => {z1 => Array.new(8760, 23), z3 => Array.new(8760, 17)},
           z3 => {z1 => Array.new(8760, 34), z2 => Array.new(8760, 34)})
         piv.add_operator_production(op1, z1 => Array.new(8760, 25), z2 => Array.new(8760, 78))
-        piv.add_competitor_production(op1, z1 => Array.new(8760, 30), z2 => Array.new(8760, 98))
+        piv.add_competitors_production(op1, z1 => Array.new(8760, 30), z2 => Array.new(8760, 98))
 
         gross_zone_residual_demand = piv.calc_zone_residual_demands(op1, req_type)
         # min = piv.net_residual_demand(gross_zone_residual_demand, zone_set, op1)

@@ -46,7 +46,7 @@ RSpec.describe Piv do
         z2 => arr_8760(10),
         z3 => arr_8760(10)
       )
-      piv.add_competitor_production(op1,
+      piv.add_competitors_production(op1,
         z1 => arr_8760(40),
         z2 => arr_8760(120),
         z3 => arr_8760(75)
@@ -56,7 +56,7 @@ RSpec.describe Piv do
         z2 => arr_8760(10),
         z3 => arr_8760(30)
       )
-      piv.add_competitor_production(op2,
+      piv.add_competitors_production(op2,
         z1 => arr_8760(20),
         z2 => arr_8760(130),
         z3 => arr_8760(60)
