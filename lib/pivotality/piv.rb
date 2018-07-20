@@ -3,7 +3,7 @@ module Pivotality
   class Piv
     attr_reader :requirements, :year, :imports, :limits, :operator_production, :competitor_production, :results
 
-    def initialize(year)
+    def initialize(year, results: PivResults.new(skip_negative: false))
       @year = year
 
       @operator_name = {}
@@ -22,37 +22,39 @@ module Pivotality
     # Add Energy request ("Fabbisogno di energia") data,
     # as an hash {zone_id => values, ...}
     def add_energy_req(hash)
-      @requirements[:ene] = hash
+      @requirements[:ene].merge! hash
     end
 
     # Add Power request ("Fabbisogno di potenza") data,
     # as an hash {zone_id => values, ...}
     def add_power_req(hash)
-      @requirements[:pot] = hash
+      @requirements[:pot].merge! hash
     end
 
     # Add Imports from abroad data,
     # as an hash {zone_id => values, ...}
     def add_imports(hash)
-      @imports = hash
+      @imports.merge! hash
     end
 
     # Add limits of energy transport between zones data,
     # as an hash: { to_zone_id => {from_zone_id => values, ...}, ...}
     def add_limits(hash)
-      @limits = hash
+      @limits.merge! hash
     end
 
     # Add zone total production of the operator
     # pass the operator and an hash: {zone_id => values}
     def add_operator_production(operator_id, hash)
-      @operator_production[operator_id] = hash
+      @operator_production[operator_id]||={}
+      @operator_production[operator_id].merge! hash
     end
 
     # Add zone total production of competitors of the operator
     # pass the operator and an hash: {zone_id => values}
     def add_competitors_production(operator_id, hash)
-      @competitor_production[operator_id] = hash
+      @competitor_production[operator_id]||={}
+      @competitor_production[operator_id].merge! hash
     end
 
     # Set the zone_id => zone_name pairs

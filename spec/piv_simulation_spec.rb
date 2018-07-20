@@ -62,11 +62,6 @@ RSpec.describe Piv do
         z3 => arr_8760(60)
       )
 
-      class YearArray::Yarray
-        def to_s
-          "start_time: #{start_time}, arr: [#{arr[0..6].join(', ')}, ..., #{arr.last}]"
-        end
-      end
       piv.calculate
       expect(piv.results.get(operator: op1, req_type: :ene, zone_set: [z1]).arr.first).to eq(-27)
       expect(piv.results.get(operator: op1, req_type: :ene, zone_set: [z2]).arr.first).to eq(7)

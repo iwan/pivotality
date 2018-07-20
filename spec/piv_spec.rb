@@ -15,6 +15,14 @@ RSpec.describe Piv do
     expect(piv.requirements[:ene][1]).to eq([1,3,5])
   end
 
+  it "add energy requirement in multiple steps" do
+    piv = Piv.new(2014)
+    piv.add_energy_req(1 => [1,3,5])
+    piv.add_energy_req(2 => [2,3,9], 1 => [2,23])
+    expect(piv.requirements[:ene].keys).to eq([1,2])
+    expect(piv.requirements[:ene][1]).to eq([2,23])
+  end
+
   it "add power requirement" do
     piv = Piv.new(2014)
     piv.add_power_req(7 => [9,3,5,7], 8 => [3,2,1])
@@ -22,11 +30,27 @@ RSpec.describe Piv do
     expect(piv.requirements[:pot][8]).to eq([3,2,1])
   end
 
+  it "add power requirement in multiple steps" do
+    piv = Piv.new(2014)
+    piv.add_power_req(7 => [9,3,5,7], 8 => [3,2,1])
+    piv.add_power_req(2 => [2,3,9], 8 => [2,19])
+    expect(piv.requirements[:pot].keys.sort).to eq([2,7,8])
+    expect(piv.requirements[:pot][8]).to eq([2,19])
+  end
+
   it "add imports" do
     piv = Piv.new(2014)
     piv.add_imports(7 => [9,3,5,7], 8 => [3,2,1])
     expect(piv.imports[7]).to eq([9,3,5,7])
     expect(piv.imports[8]).to eq([3,2,1])
+  end
+
+  it "add imports in multiple steps" do
+    piv = Piv.new(2014)
+    piv.add_imports(7 => [9,3,5,7], 8 => [3,2,1])
+    piv.add_imports(1 => [9,3,5,7], 8 => [1])
+    expect(piv.imports.keys.sort).to eq([1,7,8])
+    expect(piv.imports[8]).to eq([1])
   end
 
   it "add limits" do
@@ -37,6 +61,15 @@ RSpec.describe Piv do
     expect(piv.limits[7][8]).to eq([3,2,1])
   end
 
+  it "add limits in multiple steps" do
+    piv = Piv.new(2014)
+    piv.add_limits(7 => {8 => [3,2,1]}, 8 => {7 => [9,3,5,7]})
+    piv.add_limits(7 => {2 => [3,2,1], 8 => [1,4]}, 8 => {7 => [2,2,3]})
+    expect(piv.limits.keys).to eq([7,8])
+    expect(piv.limits[8][7]).to eq([2,2,3])
+    expect(piv.limits[7][8]).to eq([1,4])
+  end
+
   it "add operator production" do
     piv = Piv.new(2014)
     piv.add_operator_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
@@ -44,11 +77,31 @@ RSpec.describe Piv do
     expect(piv.operator_production[3][8]).to eq([3,2,1])
   end
 
+  it "add operator production in multiple steps" do
+    piv = Piv.new(2014)
+    piv.add_operator_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
+    piv.add_operator_production(3, 7 => [1,1,1], 9 => [2,2,2,2])
+    expect(piv.operator_production[3][7]).to eq([1,1,1])
+    expect(piv.operator_production[3][8]).to eq([3,2,1])
+    expect(piv.operator_production[3][9]).to eq([2,2,2,2])
+  end
+
   it "add competitor production" do
     piv = Piv.new(2014)
     piv.add_competitors_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
     expect(piv.competitor_production[3][7]).to eq([9,3,5,7])
     expect(piv.competitor_production[3][8]).to eq([3,2,1])
+  end
+
+  it "add competitor production in multiple steps" do
+    piv = Piv.new(2014)
+    piv.add_competitors_production(6, 7 => [9,3,5,7], 8 => [3,2,1], 9 => [3,3,3,3])
+    piv.add_competitors_production(3, 7 => [9,3,5,7], 8 => [3,2,1], 9 => [3,3,3,3])
+    piv.add_competitors_production(3, 7 => [4,4,4], 9 => [4,4,5,6,6])
+    expect(piv.competitor_production[3][7]).to eq([4,4,4])
+    expect(piv.competitor_production[3][8]).to eq([3,2,1])
+    expect(piv.competitor_production[3][9]).to eq([4,4,5,6,6])
+    expect(piv.competitor_production[6][7]).to eq([9,3,5,7])
   end
 
   it "get zone ids" do
