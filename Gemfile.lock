@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pivotality (0.1.1)
+    pivotality (0.1.2)
       year_array (~> 0.1.2)
 
 GEM

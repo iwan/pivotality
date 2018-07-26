@@ -2,6 +2,7 @@ module Pivotality
 
   class Piv
     attr_reader :requirements, :year, :imports, :limits, :operator_production, :competitor_production, :results
+    REQ_TYPES = [:ene, :pot]
 
     def initialize(year, results: PivResults.new(skip_negative: false))
       @year = year
@@ -148,10 +149,10 @@ module Pivotality
     end
 
     # Run calculation for all operators, two req types, all zones
-    def calculate
-      operator_ids.each do |operator_id|
+    def calculate(operators: operator_ids, req_types: REQ_TYPES, subset_sizes: get_subset_sizes)
+      operators.each do |operator_id|
         puts "operator: #{operator_id}"
-        [:ene, :pot].each do |req_type|
+        req_types.each do |req_type|
           puts "  req_type: #{req_type}"
           subset_sizes.each do |subset_size|
             puts "    zone combination of #{subset_size}..."
@@ -183,7 +184,7 @@ module Pivotality
         z.uniq.sort
       end
 
-      def subset_sizes
+      def get_subset_sizes
         1.upto(zone_ids.size).to_a
       end
 
