@@ -22,5 +22,23 @@ module Pivotality
         nil
       end
     end
+
+    # Loop over arr elements
+    def each
+      @arr.each do |n|
+        yield(n)
+      end
+    end
+
+    # Get the operators list
+    def operators
+      @arr.map{|h| h[:operator]}.uniq
+    end
+
+    # Get the req_types available for an operator
+    def req_types(operator)
+      @arr.select{|num| h[:operator]==operator}.map{|h| h[:req_type]}.uniq
+    end
+
   end
 end
