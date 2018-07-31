@@ -190,6 +190,23 @@ RSpec.describe Piv do
         expect(min.arr[-1]).to eq(-10)
       end
 
+      it "calculate with block" do
+        piv.add_energy_req(zone_id => Array.new(8760, 100))
+        piv.add_imports(zone_id => Array.new(8760, 27))
+        piv.add_operator_production(op_id, zone_id => Array.new(8760, 25))
+        piv.add_competitors_production(op_id, zone_id => Array.new(8760, 30))
+
+        piv.calculate(req_types: [:ene]) do |op, req_type, zone_set, yarray|
+          expect(op).to eq(op_id)
+          expect(req_type).to eq(:ene)
+          expect(zone_set).to eq([1])
+
+          expect(yarray.any_negative?).to be(false)
+          expect(yarray.any_positive?).to be(true)
+          expect(yarray.arr[0]).to eq(25)
+          expect(yarray.arr[-1]).to eq(25)
+        end
+      end
     end
 
     context "two zone residual" do

@@ -6,6 +6,7 @@ module Pivotality
 
     def initialize(year, results: PivResults.new(skip_negative: false))
       @year = year
+      @results = results
 
       @operator_name = {}
       @zone_name = {}
@@ -17,6 +18,7 @@ module Pivotality
       @competitor_production = {}  #  { operator_id => {zone_id => values, ...}, ...}
 
       @zone_ids
+
       init_calculation
     end
 
@@ -97,7 +99,6 @@ module Pivotality
 
     # Initialize the results object
     def init_calculation
-      @results ||= PivResults.new
       @gross_zone_residual_demands ||= GrossZoneResidualDemands.new
     end
 
@@ -158,7 +159,11 @@ module Pivotality
             puts "    zone combination of #{subset_size}..."
             zone_ids.combination(subset_size).each do |zone_set|
               min = net_residual_demand(operator_id, req_type, zone_set)
-              @results.add(operator: operator_id, req_type: req_type, zone_set: zone_set, yarray: min)
+              if block_given?
+                yield(operator_id, req_type, zone_set, min)
+              else
+                @results.add(operator: operator_id, req_type: req_type, zone_set: zone_set, yarray: min)
+              end
             end
           end
         end
