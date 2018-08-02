@@ -163,15 +163,18 @@ module Pivotality
 
 
     # Run calculation for all operators, two req types, all zones
-    def calculate(operators: operator_ids, req_types: REQ_TYPES)
-      operators.each do |operator_id|
+    # Options:
+    # You can limit operators calculation using op_ids: [2,41]
+    # You can limit req_type calculation using req_types: :ene
+    def calculate(options={})
+      options = { op_ids: operator_ids, req_types: REQ_TYPES }.merge(options)
+      options[:req_type] = [options[:req_type]] if !options[:req_type].is_a? Array
+
+      options[:op_ids].each do |operator_id|
         puts "operator: #{operator_id}"
-        req_types.each do |req_type|
+        options[:req_types].each do |req_type|
           puts "  req_type: #{req_type}"
-
           zone_ids = extract_zone_ids(operator_id)
-
-
           get_subset_sizes(zone_ids).each do |subset_size|
             puts "    zone combination of #{subset_size}..."
             zone_ids.combination(subset_size).each do |zone_set|
