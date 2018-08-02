@@ -111,8 +111,11 @@ RSpec.describe Piv do
     piv.add_imports(2 => [9,3,5,7], 8 => [3,2,1])
     piv.add_limits(7 => {8 => [3,2,1]}, 8 => {7 => [9,3,5,7]})
     piv.add_operator_production(3, 3 => [9,3,5,7], 8 => [3,2,1])
+    piv.add_operator_production(4, 3 => [9,3,5,7], 8 => [3,2,1])
     piv.add_competitors_production(3, 7 => [9,3,5,7], 5 => [3,2,1])
-    expect(piv.zone_ids).to eq([1,2,3,5,7,8])
+    expect(piv.non_zero_zone_ids).to eq([1,2,7,8])
+    expect(piv.extract_zone_ids(3)).to eq([1,2,3,5,7,8])
+    expect(piv.extract_zone_ids(4)).to eq([1,2,3,7,8])
   end
 
   it "get operator ids" do
