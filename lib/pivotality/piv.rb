@@ -87,7 +87,7 @@ module Pivotality
     end
 
     # Get the zone ids with non-zero values
-    # indipendent and dependent of operator
+    # independent and dependent of operator
     def extract_zone_ids(operator_id)
       z = non_zero_zone_ids
       z += @operator_production[operator_id].map{|zone_id, arr| arr.any?{|e| !e.zero?} ? zone_id : nil }.compact if @operator_production[operator_id]
@@ -172,6 +172,62 @@ module Pivotality
 
       options[:op_ids].each do |operator_id|
         puts "operator: #{operator_id}"
+        options[:req_types].each do |req_type|
+          puts "  req_type: #{req_type}"
+          zone_ids = extract_zone_ids(operator_id)
+          get_subset_sizes(zone_ids).each do |subset_size|
+            puts "    zone combination of #{subset_size}..."
+            zone_ids.combination(subset_size).each do |zone_set|
+              min = net_residual_demand(operator_id, req_type, zone_set)
+              if block_given?
+                yield(operator_id, req_type, zone_set, min)
+              else
+                @results.add(operator: operator_id, req_type: req_type, zone_set: zone_set, yarray: min)
+              end
+            end
+          end
+        end
+      end
+    end
+
+
+    # Run calculation passing an hash that specify which
+    # operators, req_types and zones group are included in calculation
+    # The hash must be in this format:
+    # { op_id => { req_type => [zone1, zone2, ...], }}
+    # For example: { 12 => { 'ene' => [1,2,3], 'pot' => [1,2,3,4]}, 21 => {...}, ... }
+    def calculate_for(hash)
+      options = { op_ids: operator_ids, req_types: REQ_TYPES }.merge(options)
+      options[:req_type] = [options[:req_type]] if !options[:req_type].is_a? Array
+
+      hash.each_pair do |operator_id, h|
+        if operator_ids.include? operator_id
+          puts "operator: #{operator_id}"
+          h.each_pair do |req_type, zone_ids|
+            puts "  req_type: #{req_type}"
+            if ['ene', 'pot'].include?(req_type)
+              available_zone_ids = extract_zone_ids(operator_id)
+              zone_ids = zone_ids & available_zone_ids
+              get_subset_sizes(zone_ids).each do |subset_size|
+                puts "    zone combination of #{subset_size}..."
+                zone_ids.combination(subset_size).each do |zone_set|
+                  min = net_residual_demand(operator_id, req_type, zone_set)
+                  if block_given?
+                    yield(operator_id, req_type, zone_set, min)
+                  else
+                    @results.add(operator: operator_id, req_type: req_type, zone_set: zone_set, yarray: min)
+                  end
+                end
+              end
+            end
+
+          end
+        else
+          puts "operator_id #{operator_id} was not found!"
+        end
+
+
+
         options[:req_types].each do |req_type|
           puts "  req_type: #{req_type}"
           zone_ids = extract_zone_ids(operator_id)
