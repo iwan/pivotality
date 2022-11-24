@@ -9,14 +9,14 @@ RSpec.describe Piv do
   # end
 
   it "add energy requirement" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_energy_req(1 => [1,3,5])
     expect(piv.requirements[:ene].keys).to eq([1])
     expect(piv.requirements[:ene][1]).to eq([1,3,5])
   end
 
   it "add energy requirement in multiple steps" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_energy_req(1 => [1,3,5])
     piv.add_energy_req(2 => [2,3,9], 1 => [2,23])
     expect(piv.requirements[:ene].keys).to eq([1,2])
@@ -24,14 +24,14 @@ RSpec.describe Piv do
   end
 
   it "add power requirement" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_power_req(7 => [9,3,5,7], 8 => [3,2,1])
     expect(piv.requirements[:pot][7]).to eq([9,3,5,7])
     expect(piv.requirements[:pot][8]).to eq([3,2,1])
   end
 
   it "add power requirement in multiple steps" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_power_req(7 => [9,3,5,7], 8 => [3,2,1])
     piv.add_power_req(2 => [2,3,9], 8 => [2,19])
     expect(piv.requirements[:pot].keys.sort).to eq([2,7,8])
@@ -39,14 +39,14 @@ RSpec.describe Piv do
   end
 
   it "add imports" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_imports(7 => [9,3,5,7], 8 => [3,2,1])
     expect(piv.imports[7]).to eq([9,3,5,7])
     expect(piv.imports[8]).to eq([3,2,1])
   end
 
   it "add imports in multiple steps" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_imports(7 => [9,3,5,7], 8 => [3,2,1])
     piv.add_imports(1 => [9,3,5,7], 8 => [1])
     expect(piv.imports.keys.sort).to eq([1,7,8])
@@ -54,7 +54,7 @@ RSpec.describe Piv do
   end
 
   it "add limits" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_limits(7 => {8 => [3,2,1]}, 8 => {7 => [9,3,5,7]})
     expect(piv.limits.keys).to eq([7,8])
     expect(piv.limits[8][7]).to eq([9,3,5,7])
@@ -62,7 +62,7 @@ RSpec.describe Piv do
   end
 
   it "add limits in multiple steps" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_limits(7 => {8 => [3,2,1]}, 8 => {7 => [9,3,5,7]})
     piv.add_limits(7 => {2 => [3,2,1], 8 => [1,4]}, 8 => {7 => [2,2,3]})
     expect(piv.limits.keys).to eq([7,8])
@@ -71,14 +71,14 @@ RSpec.describe Piv do
   end
 
   it "add operator production" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_operator_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
     expect(piv.operator_production[3][7]).to eq([9,3,5,7])
     expect(piv.operator_production[3][8]).to eq([3,2,1])
   end
 
   it "add operator production in multiple steps" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_operator_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
     piv.add_operator_production(3, 7 => [1,1,1], 9 => [2,2,2,2])
     expect(piv.operator_production[3][7]).to eq([1,1,1])
@@ -87,14 +87,14 @@ RSpec.describe Piv do
   end
 
   it "add competitor production" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_competitors_production(3, 7 => [9,3,5,7], 8 => [3,2,1])
     expect(piv.competitor_production[3][7]).to eq([9,3,5,7])
     expect(piv.competitor_production[3][8]).to eq([3,2,1])
   end
 
   it "add competitor production in multiple steps" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_competitors_production(6, 7 => [9,3,5,7], 8 => [3,2,1], 9 => [3,3,3,3])
     piv.add_competitors_production(3, 7 => [9,3,5,7], 8 => [3,2,1], 9 => [3,3,3,3])
     piv.add_competitors_production(3, 7 => [4,4,4], 9 => [4,4,5,6,6])
@@ -105,7 +105,7 @@ RSpec.describe Piv do
   end
 
   it "get zone ids" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_energy_req(1 => [1,3,5])
     piv.add_power_req(7 => [9,3,5,7], 8 => [3,2,1])
     piv.add_imports(2 => [9,3,5,7], 8 => [3,2,1])
@@ -119,7 +119,7 @@ RSpec.describe Piv do
   end
 
   it "get operator ids" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.add_operator_production(3, 3 => [9,3,5,7], 8 => [3,2,1])
     piv.add_operator_production(4, 3 => [9,3,5,7], 8 => [3,2,1])
     piv.add_competitors_production(3, 7 => [9,3,5,7], 5 => [3,2,1])
@@ -128,14 +128,14 @@ RSpec.describe Piv do
   end
 
   it "set zone decode" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.set_zones_decode(3 => "nord", 4 => "sici", 5 => "sud")
     expect(piv.zone_name(3)).to eq("nord")
     expect(piv.zone_name(1)).to eq(:undefined)
   end
 
   it "set zone decode" do
-    piv = Piv.new(2014)
+    piv = Piv.new
     piv.set_operators_decode(13 => "acme", 4 => "energy_acme")
     expect(piv.operator_name(13)).to eq("acme")
     expect(piv.operator_name(1)).to eq(:undefined)
@@ -146,7 +146,7 @@ RSpec.describe Piv do
     context "single zone residual" do
       subject(:op_id) { 50 }
       subject(:zone_id) { 1 }
-      let(:piv) { Piv.new(2014) }
+      let(:piv) { Piv.new }
 
       it "has residual demand smaller than operator production" do
         piv.add_energy_req(zone_id => Array.new(8760, 100), 2 => Array.new(8760, 888))
@@ -156,7 +156,7 @@ RSpec.describe Piv do
         piv.add_competitors_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
 
         res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
-        min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
+        min = Vector::Vector.min(res, piv.sum_operator_production(op_id, [zone_id]))
         expect(min.any_negative?).to be(false)
         expect(min.any_positive?).to be(true)
         expect(min.arr[0]).to eq(15)
@@ -171,7 +171,7 @@ RSpec.describe Piv do
         piv.add_competitors_production(op_id, zone_id => Array.new(8760, 30), 2 => Array.new(8760, 98))
 
         res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
-        min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
+        min = Vector::Vector.min(res, piv.sum_operator_production(op_id, [zone_id]))
         expect(min.any_negative?).to be(false)
         expect(min.any_positive?).to be(true)
         expect(min.arr[0]).to eq(8)
@@ -186,7 +186,7 @@ RSpec.describe Piv do
         piv.add_competitors_production(op_id, zone_id => Array.new(8760, 55), 2 => Array.new(8760, 98))
 
         res = piv.calc_zone_residual_demand(op_id, :ene, zone_id)
-        min = Yarray.min(res, piv.sum_operator_production(op_id, [zone_id]))
+        min = Vector::Vector.min(res, piv.sum_operator_production(op_id, [zone_id]))
         expect(min.any_negative?).to be(true)
         expect(min.any_positive?).to be(false)
         expect(min.arr[0]).to eq(-10)
@@ -199,15 +199,15 @@ RSpec.describe Piv do
         piv.add_operator_production(op_id, zone_id => Array.new(8760, 25))
         piv.add_competitors_production(op_id, zone_id => Array.new(8760, 30))
 
-        piv.calculate(req_types: [:ene]) do |op, req_type, zone_set, yarray|
+        piv.calculate(req_types: [:ene]) do |op, req_type, zone_set, vector|
           expect(op).to eq(op_id)
           expect(req_type).to eq(:ene)
           expect(zone_set).to eq([1])
 
-          expect(yarray.any_negative?).to be(false)
-          expect(yarray.any_positive?).to be(true)
-          expect(yarray.arr[0]).to eq(25)
-          expect(yarray.arr[-1]).to eq(25)
+          expect(vector.any_negative?).to be(false)
+          expect(vector.any_positive?).to be(true)
+          expect(vector.arr[0]).to eq(25)
+          expect(vector.arr[-1]).to eq(25)
         end
       end
     end
@@ -219,7 +219,7 @@ RSpec.describe Piv do
       subject(:z2) { 2 }
       subject(:z3) { 3 }
       subject(:req_type) { :ene }
-      let(:piv) { Piv.new(2014) }
+      let(:piv) { Piv.new }
       let(:zone_set) { [z1, z2]}
 
       it "has residual demand smaller than operator production" do

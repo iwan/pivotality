@@ -5,7 +5,7 @@ RSpec.describe Piv do
     subject(:z1) { 1 }
     subject(:z2) { 2 }
     subject(:z3) { 3 }
-    let(:piv) { Piv.new(2014) }
+    let(:piv) { Piv.new(results: PivResults.new(skip_negative: false)) }
     let(:zone_set) { [z1, z2]}
 
     def arr_8760(n)
@@ -63,6 +63,7 @@ RSpec.describe Piv do
       )
 
       piv.calculate
+
       expect(piv.results.get(operator: op1, req_type: :ene, zone_set: [z1]).arr.first).to eq(-27)
       expect(piv.results.get(operator: op1, req_type: :ene, zone_set: [z2]).arr.first).to eq(7)
       expect(piv.results.get(operator: op1, req_type: :ene, zone_set: [z3]).arr.first).to eq(-25)
