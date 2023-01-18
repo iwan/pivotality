@@ -17,4 +17,6 @@ gem 'benchmark'
 
 gem 'byebug'
 
+gem 'logger'
+
 gem 'vector', git: 'https://github.com/iwan/vector', branch: 'main'

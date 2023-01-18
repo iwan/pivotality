@@ -19,6 +19,7 @@ module Pivotality
       @zone_ids
 
       @size = nil
+      @log = Logger.new(STDOUT)
 
       init_calculation
     end
@@ -146,6 +147,7 @@ module Pivotality
     def calc_zones_residual_demand(operator_id, req_type, zone_set)
       sum = Vector::Vector.new(size: size)
       zone_set.each do |zone_id|
+        @log.debug "      --- evaluate residual for op: #{operator_id}, req_type: #{req_type}, zone_id: #{zone_id}"
         d = @gross_zone_residual_demands.get(operator: operator_id, req_type: req_type, zone: zone_id)
         if d.nil?
           d = calc_zone_residual_demand(operator_id, req_type, zone_id)
@@ -179,12 +181,12 @@ module Pivotality
       options[:req_type] = [options[:req_type]] if !options[:req_type].is_a? Array
 
       options[:op_ids].each do |operator_id|
-        puts "operator: #{operator_id}"
+        @log.info "operator: #{operator_id}"
         options[:req_types].each do |req_type|
-          puts "  req_type: #{req_type}"
+          @log.info "  req_type: #{req_type}"
           zone_ids = extract_zone_ids(operator_id)
           get_subset_sizes(zone_ids).each do |subset_size|
-            puts "    zone combination of #{subset_size}..."
+            @log.info "    zone combination of #{subset_size}..."
             zone_ids.combination(subset_size).each do |zone_set|
               min = net_residual_demand(operator_id, req_type, zone_set)
               if block_given?
@@ -210,14 +212,14 @@ module Pivotality
 
       hash.each_pair do |operator_id, h|
         if operator_ids.include? operator_id
-          puts "operator: #{operator_id}"
+          @log.info "operator: #{operator_id}"
           h.each_pair do |req_type, zone_ids|
-            puts "  req_type: #{req_type}"
+            @log.info "  req_type: #{req_type}"
             if ['ene', 'pot'].include?(req_type)
               available_zone_ids = extract_zone_ids(operator_id)
               zone_ids = zone_ids & available_zone_ids
               get_subset_sizes(zone_ids).each do |subset_size|
-                puts "    zone combination of #{subset_size}..."
+                @log.info "    zone combination of #{subset_size}..."
                 zone_ids.combination(subset_size).each do |zone_set|
                   min = net_residual_demand(operator_id, req_type, zone_set)
                   if block_given?
@@ -231,16 +233,16 @@ module Pivotality
 
           end
         else
-          puts "operator_id #{operator_id} was not found!"
+          @log.info "operator_id #{operator_id} was not found!"
         end
 
 
 
         options[:req_types].each do |req_type|
-          puts "  req_type: #{req_type}"
+          @log.info "  req_type: #{req_type}"
           zone_ids = extract_zone_ids(operator_id)
           get_subset_sizes(zone_ids).each do |subset_size|
-            puts "    zone combination of #{subset_size}..."
+            @log.info "    zone combination of #{subset_size}..."
             zone_ids.combination(subset_size).each do |zone_set|
               min = net_residual_demand(operator_id, req_type, zone_set)
               if block_given?
